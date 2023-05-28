@@ -1,0 +1,65 @@
+##################  DOCKERFILE	##################
+
+    FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-env
+    WORKDIR /App
+    
+    # Copy everything
+    COPY . ./
+    # Restore as distinct layers
+    RUN dotnet restore
+    # Build and publish a release
+    RUN dotnet publish -c Release -o out
+    
+    # Build runtime image
+    FROM mcr.microsoft.com/dotnet/aspnet:6.0
+    WORKDIR /App
+    COPY --from=build-env /App/out .
+    
+    ENV ASPNETCORE_URLS=http://+:5001
+    EXPOSE 5001
+    
+    ENTRYPOINT ["dotnet", "BaseApi.dll"]
+
+##################  DOCKERFILE	##################
+
+    comandos: 
+    docker build -t aplicacao-teste -f Dockerfile .
+    docker run -it -p 5001:5001 aplicacao-teste
+
+################################################
+
+    # build individual na pasta do projeto
+    docker build -t app-backend:latest -f Dockerfile . --no-cache
+    docker build -t app-frontend:latest -f Dockerfile . --no-cache
+
+    # retag das imagens
+    docker tag app-backend:latest rafaelsenff/app-backend
+    docker tag app-frontend:latest rafaelsenff/app-frontend
+
+    # push das imagens
+    docker push rafaelsenff/app-backend:latest
+    docker push rafaelsenff/app-frontend:latest
+
+    # dentro da vm: 
+    sudo docker pull rafaelsenff/app-backend:latest
+    sudo docker pull rafaelsenff/app-frontend:latest
+    sudo docker compose up -d
+
+    http://rafaelsenfflabs.brazilsouth.cloudapp.azure.com/
+
+
+################################################
+
+    Configurando auto start do docker
+    First create your startup script @ /home/user/startup.sh, and make it executable
+
+    chmod +x /home/user/startup.sh
+    Then set a crontab for it:
+
+    $ crontab -e
+    @reboot  /home/user/startup.sh
+    Now your your startup.sh script will run at every start.
+
+################################################
+
+ps aux --sort -%mem | head -10

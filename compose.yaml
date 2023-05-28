@@ -1,0 +1,55 @@
+services:
+  appbook:
+    restart: always
+    image: rafaelsenff/app-book:latest
+    ports:
+      - 5001:80
+    depends_on:
+      - mongo
+      - rabbitmq
+  appbookhistory:
+    restart: always
+    image: rafaelsenff/app-bookhistory:latest
+    ports:
+      - 5003:80
+    depends_on:
+      - mongo
+      - rabbitmq
+  appfrontend:
+    restart: always
+    image: rafaelsenff/app-frontend-fuse:latest
+    depends_on:
+      - appbook
+      - appbookhistory
+    ports:
+      - 80:80
+  mongo:
+    restart: always
+    image: mongo:4.2.0
+    volumes:
+      - mongodbdata_volume:/data/db    
+    ports:
+      - 27017:27017
+    expose:
+      - 27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: secret
+      MONGO_INITDB_ROOT_PASSWORD: secret
+  rabbitmq:
+    restart: always
+    image: rabbitmq:3-management-alpine
+    hostname: "rabbitmq"
+    labels:
+      NAME: "rabbitmq"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/
+      - rabbitmq_log:/var/log/rabbitmq/
+
+volumes:
+  rabbitmq_data:
+  rabbitmq_log:
+  mongodbdata_volume:
+    external: true
