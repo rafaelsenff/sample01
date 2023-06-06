@@ -2,27 +2,43 @@ services:
   appbook:
     restart: always
     image: rafaelsenff/app-book:latest
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=[x]
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/etc/nginx/certificate/novocertificate.pfx
     ports:
       - 5001:80
+      - 5002:443
+    volumes:
+      - /etc/nginx/certificate:/etc/nginx/certificate
     depends_on:
       - mongo
       - rabbitmq
   appbookhistory:
     restart: always
     image: rafaelsenff/app-bookhistory:latest
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=[x]
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/etc/nginx/certificate/novocertificate.pfx
     ports:
       - 5003:80
+      - 5004:443
+    volumes:
+      - /etc/nginx/certificate:/etc/nginx/certificate
     depends_on:
       - mongo
       - rabbitmq
   appfrontend:
     restart: always
-    image: rafaelsenff/app-frontend-fuse:latest
-    depends_on:
-      - appbook
-      - appbookhistory
+    image: rafaelsenff/app-frontend:latest
     ports:
       - 80:80
+      - 443:443
+    volumes:
+      - /etc/nginx/certificate:/etc/nginx/certificate
   mongo:
     restart: always
     image: mongo:4.2.0
@@ -33,8 +49,8 @@ services:
     expose:
       - 27017
     environment:
-      MONGO_INITDB_ROOT_USERNAME: secret
-      MONGO_INITDB_ROOT_PASSWORD: secret
+      MONGO_INITDB_ROOT_USERNAME: [x]
+      MONGO_INITDB_ROOT_PASSWORD: [x]
   rabbitmq:
     restart: always
     image: rabbitmq:3-management-alpine
@@ -47,7 +63,6 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq/
       - rabbitmq_log:/var/log/rabbitmq/
-
 volumes:
   rabbitmq_data:
   rabbitmq_log:
